@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Somnexus × Algorand × SmartVista — Advanced MVP Demo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f8f9fa;--bg3:#f1f3f5;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#9ba3af;
+  --bdr:rgba(0,0,0,0.1);--bdr2:rgba(0,0,0,0.18);
+  --info-bg:#e8f4fd;--info:#1a6fad;--info-bdr:rgba(26,111,173,0.3);
+  --ok-bg:#e8f8f0;--ok:#1a7f4b;--ok-bdr:rgba(26,127,75,0.3);
+  --warn-bg:#fff8e1;--warn:#b45309;--warn-bdr:rgba(180,83,9,0.3);
+  --err-bg:#fde8e8;--err:#b91c1c;--err-bdr:rgba(185,28,28,0.3);
+  --purple-bg:#f3f0ff;--purple:#5b21b6;--purple-bdr:rgba(91,33,182,0.3);
+  --teal-bg:#e0f7f4;--teal:#0d6e6e;--teal-bdr:rgba(13,110,110,0.3);
+  --r:8px;--rl:12px
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text);font-size:14px;min-height:100vh}
+button{cursor:pointer;border:0.5px solid var(--bdr2);background:var(--bg);color:var(--text);border-radius:var(--r);padding:6px 14px;font-size:13px;font-family:inherit;transition:background 0.15s}
+button:hover{background:var(--bg2)} button:disabled{opacity:.4;cursor:not-allowed}
+table{width:100%;border-collapse:collapse} th{font-weight:500;text-align:left}
+.tbl-hd{padding:8px 12px;font-size:11px;color:var(--text2);border-bottom:0.5px solid var(--bdr);background:var(--bg2)}
+.tbl-td{padding:10px 12px;font-size:12px}
+.tbl-row{border-bottom:0.5px solid var(--bdr)}
+.tbl-row:hover{background:var(--bg2)}
+.card{background:var(--bg);border:0.5px solid var(--bdr);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:0.5px solid var(--bdr);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.card-bd{padding:16px 20px}
+.metric{background:var(--bg2);border-radius:var(--r);padding:12px 14px}
+.metric-lbl{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.metric-val{font-size:22px;font-weight:500}
+.pill{font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--bdr);display:inline-block;white-space:nowrap}
+.pill-row{display:flex;gap:6px;flex-wrap:wrap}
+.nav-item{padding:9px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:all 0.15s}
+.nav-item.active{border-left-color:var(--info);background:var(--info-bg)}
+.nav-item:hover:not(.active){background:var(--bg3)}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:0.5px solid var(--bdr);background:var(--bg);position:sticky;top:0;z-index:10}
+.layout{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{width:204px;border-right:0.5px solid var(--bdr);background:var(--bg2);flex-shrink:0;padding-top:8px}
+.content{flex:1;padding:20px;overflow-y:auto;min-width:0}
+
+/* PHONE FRAME */
+.phone{width:280px;border:1.5px solid var(--bdr2);border-radius:20px;overflow:hidden;background:var(--bg);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.phone-status{background:var(--text);color:#fff;padding:4px 14px;font-size:10px;display:flex;justify-content:space-between;align-items:center}
+.phone-appbar{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--bdr)}
+.phone-body{padding:0;min-height:380px;display:flex;flex-direction:column}
+.phone-tabbar{border-top:0.5px solid var(--bdr);display:flex;background:var(--bg)}
+.tab-btn{flex:1;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:transparent;font-size:9px;color:var(--text3)}
+.tab-btn.active-tab{color:var(--info)}
+
+/* TIMELINE */
+.timeline{display:flex;gap:0;padding:10px 20px;background:var(--bg);border-bottom:0.5px solid var(--bdr);overflow-x:auto;scrollbar-width:none}
+.timeline::-webkit-scrollbar{display:none}
+.tl-step{display:flex;align-items:center;flex-shrink:0}
+.tl-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;border:0.5px solid var(--bdr2);background:var(--bg2);color:var(--text3);cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.tl-dot.tl-active{background:var(--info);border-color:var(--info);color:#fff}
+.tl-dot.tl-done{background:var(--ok-bg);border-color:var(--ok-bdr);color:var(--ok)}
+.tl-label{font-size:9px;color:var(--text3);margin-top:3px;text-align:center;max-width:60px}
+.tl-item{display:flex;flex-direction:column;align-items:center;gap:0}
+.tl-line{width:18px;height:1px;background:var(--bdr2);margin-top:-14px;flex-shrink:0}
+
+/* ANIMATIONS */
+@keyframes scan-line{0%{top:4px}50%{top:calc(100% - 4px)}100%{top:4px}}
+@keyframes ripple-nfc{0%{transform:scale(0.6);opacity:0.8}100%{transform:scale(3);opacity:0}}
+@keyframes slide-r{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fade-up{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.25}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dot-fill{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes coin-move{0%{transform:translateX(0);opacity:1}100%{transform:translateX(200px);opacity:0}}
+@keyframes balance-up{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes check-pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.scan-bar{position:absolute;left:0;right:0;height:2px;background:var(--info);animation:scan-line 1.4s linear infinite;opacity:0.8}
+.nfc-ring{position:absolute;inset:-12px;border-radius:50%;border:2px solid var(--info-bdr);animation:ripple-nfc 1.2s ease-out infinite}
+.nfc-ring2{position:absolute;inset:-12px;border-radius:50%;border:2px solid var(--info-bdr);animation:ripple-nfc 1.2s ease-out 0.5s infinite}
+.slide-r{animation:slide-r 0.35s ease forwards}
+.fade-up{animation:fade-up 0.3s ease forwards}
+.shake{animation:shake 0.45s ease}
+.pulse{animation:pulse-dot 1.6s ease infinite}
+.spin{animation:spin 1s linear infinite}
+.check-pop{animation:check-pop 0.4s ease forwards}
+
+/* ALGO BRAND */
+.algo-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--purple-bg);border:0.5px solid var(--purple-bdr);color:var(--purple);font-size:11px;font-weight:500}
+.usdc-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--teal-bg);border:0.5px solid var(--teal-bdr);color:var(--teal);font-size:11px;font-weight:500}
+
+/* KEYPAD */
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px}
+.key-btn{padding:12px;border-radius:var(--r);background:var(--bg2);border:0.5px solid var(--bdr);font-size:16px;font-weight:500;cursor:pointer;text-align:center;transition:background 0.1s}
+.key-btn:active{background:var(--bg3)}
+
+/* PIN DOTS */
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--bdr2);background:transparent;transition:all 0.2s;flex-shrink:0}
+.pin-dot.filled{background:var(--info);border-color:var(--info)}
+
+/* VAM NODE */
+.vam-node{background:var(--bg);border:0.5px solid var(--bdr);border-radius:var(--r);padding:10px 12px;text-align:center}
+.vam-flow{display:grid;gap:6px}
+.vam-arrow{text-align:center;color:var(--text3);font-size:12px}
+.check-step{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px}
+
+/* WALLET CARD */
+.wallet-card{border-radius:var(--rl);padding:16px;margin:12px;position:relative;overflow:hidden;border:0.5px solid var(--bdr2)}
+
+/* FLOW GRID */
+.flow3{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;gap:8px;align-items:start}
+.flow2{display:grid;grid-template-columns:1fr 28px 1fr;gap:8px;align-items:start}
+.flow-col{border:0.5px solid var(--bdr);border-radius:var(--rl);padding:14px;transition:all 0.4s}
+.f-arrow{display:flex;justify-content:center;padding-top:50px}
+.stage-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 16px;background:var(--bg2);border-radius:var(--r)}
+.s-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:0.5px solid var(--bdr);flex-shrink:0;transition:all 0.3s}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+/* ─── Constants ─── */
+const SCREENS=[
+  {id:'donor',   label:'Donor + USDC',       icon:'ti-building-bank', steps:[1,2]},
+  {id:'wfp',     label:'WFP aid setup',      icon:'ti-settings',      steps:[6]},
+  {id:'enroll',  label:'Agent enrolment',    icon:'ti-device-mobile', steps:[3,4]},
+  {id:'merchant',label:'Merchant app',       icon:'ti-shopping-cart', steps:[5,7]},
+  {id:'vam',     label:'SmartVista VAM',     icon:'ti-server',        steps:[8]},
+  {id:'cashout', label:'Merchant cashout',   icon:'ti-cash',          steps:[9,10]},
+  {id:'fraud',   label:'Fraud monitoring',   icon:'ti-shield-x',      steps:[11]},
+  {id:'algo',    label:'Algorand audit',     icon:'ti-link',          steps:[12]},
+  {id:'dash',    label:'Donor dashboard',    icon:'ti-chart-bar',     steps:[13]},
+];
+
+const TL_STEPS=[
+  {n:1,lbl:'Donor funds'},{n:2,lbl:'Settlement'},{n:3,lbl:'Enrolment'},{n:4,lbl:'NFC card'},
+  {n:5,lbl:'Merchant'},{n:6,lbl:'Disbursement'},{n:7,lbl:'Redemption'},{n:8,lbl:'Settlement'},
+  {n:9,lbl:'Cashout'},{n:10,lbl:'Liquidity'},{n:11,lbl:'Fraud mon.'},{n:12,lbl:'Algorand'},{n:13,lbl:'Reporting'},
+];
+
+const INIT_LEDGER=[
+  {hash:'7X2KP...9M4QR',id:'SO-BDO-4821',m:'Yusuf Ahmed',amt:'$25',t:'09:47:23',ok:true,ev:'redemption'},
+  {hash:'FUND-WALLET-BATCH',id:'WFP-BATCH-001',m:'VAM engine',amt:'$600,000',t:'09:30:00',ok:true,ev:'disbursement'},
+  {hash:'3T8NF...2L7VW',id:'SO-BDO-3104',m:'Hodan Ali',amt:'$50',t:'09:45:11',ok:true,ev:'redemption'},
+  {hash:'FRAUD-4803',id:'SO-BDO-4803',m:'Yusuf Ahmed',amt:'$0',t:'09:41:30',ok:false,ev:'fraud_blocked'},
+  {hash:'ENROLL-4821',id:'SO-BDO-4821',m:'Agent: Abdi',amt:'$0',t:'09:20:00',ok:true,ev:'enrolment'},
+];
+
+const sc=s=>s>=85?'var(--ok)':s>=60?'var(--warn)':'var(--err)';
+const sb=s=>s>=85?'var(--ok-bg)':s>=60?'var(--warn-bg)':'var(--err-bg)';
+
+/* ─── Shared Components ─── */
+function M({label,value,icon,color}){
+  return(
+    <div className="metric">
+      <div className="metric-lbl"><i className={`ti ${icon}`} style={{fontSize:14,color:color||'var(--text2)'}} aria-hidden="true"/>{label}</div>
+      <div className="metric-val" style={{color:color||'var(--text)'}}>{value}</div>
+    </div>
+  );
+}
+function Pill({text,color,bg}){return <span className="pill" style={{background:bg||'var(--bg2)',color:color||'var(--text2)'}}>{text}</span>}
+function Ring({score,size=88,stroke=7}){
+  const r=(size-stroke*2)/2,c=2*Math.PI*r,p=score/100;
+  return(
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{transform:'rotate(-90deg)'}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--bdr)" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={sc(score)} strokeWidth={stroke}
+        strokeDasharray={`${(c*p).toFixed(1)} ${(c*(1-p)).toFixed(1)}`} strokeLinecap="round" style={{transition:'stroke-dasharray 0.9s'}}/>
+    </svg>
+  );
+}
+function Arrow({active}){return <div className="f-arrow"><i className="ti ti-arrow-right" style={{fontSize:18,color:active?'var(--ok)':'var(--text3)'}} aria-hidden="true"/></div>}
+function CheckStep({done,active,text}){
+  return(
+    <div className="check-step">
+      <i className={`ti ${done?'ti-circle-check':active?'ti-loader-2':'ti-circle'} ${active?'spin':''}`}
+        style={{fontSize:14,color:done?'var(--ok)':active?'var(--info)':'var(--text3)',flexShrink:0}} aria-hidden="true"/>
+      <span style={{color:done?'var(--text)':active?'var(--text)':'var(--text3)'}}>{text}</span>
+    </div>
+  );
+}
+
+/* ─── SCREEN 1: Donor + USDC ─── */
+function DonorScreen(){
+  const [stage,setStage]=useState(0);
+  const [count,setCount]=useState(600000);
+  const [running,setRunning]=useState(false);
+  const run=async()=>{
+    setRunning(true);
+    await new Promise(r=>setTimeout(r,900));setStage(1);
+    await new Promise(r=>setTimeout(r,1200));setStage(2);
+    await new Promise(r=>setTimeout(r,900));setStage(3);
+    setRunning(false);
+  };
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:18}}>
+        <M label="Donor funds (USD)" value="$600,000" icon="ti-building-bank" color="var(--info)"/>
+        <M label="USDC on Algorand" value={stage>=2?'$600,000':'Pending'} icon="ti-coin" color={stage>=2?'var(--teal)':'var(--text3)'}/>
+        <M label="Smart contract" value={stage>=3?'Funded':'Awaiting'} icon="ti-link" color={stage>=3?'var(--purple)':'var(--text3)'}/>
+        <M label="Beneficiaries covered" value="12,000" icon="ti-users"/>
+      </div>
+
+      {/* Stage controls */}
+      <div className="stage-bar">
+        {['USD held','Convert to USDC','Fund Algorand contract','Live & ready'].map((l,i)=>(
+          <React.Fragment key={i}>
+            <div className="s-dot" style={{background:stage>i?'var(--ok-bg)':stage===i?'var(--info-bg)':'var(--bg)',borderColor:stage>i?'var(--ok-bdr)':stage===i?'var(--info-bdr)':'var(--bdr)',color:stage>i?'var(--ok)':stage===i?'var(--info)':'var(--text3)'}}>
+              {stage>i?<i className="ti ti-check" style={{fontSize:10}} aria-hidden="true"/>:i+1}
+            </div>
+            {i<3&&<div style={{flex:1,height:1,background:stage>i?'var(--ok-bdr)':'var(--bdr)'}}/>}
+          </React.Fragment>
+        ))}
+        <div style={{marginLeft:'auto',display:'flex',gap:8}}>
+          <button onClick={()=>{setStage(0);setRunning(false);}} disabled={running||stage===0} style={{fontSize:12}}>Reset</button>
+          <button onClick={run} disabled={running||stage>0} style={{fontSize:13,fontWeight:500}}><i className="ti ti-player-play" aria-hidden="true"/> Fund via Algorand</button>
+        </div>
+      </div>
+
+      <div className="flow3">
+        {/* Donor */}
+        <div className="flow-col" style={{borderColor:stage>=1?'var(--info-bdr)':'var(--bdr)',background:stage>=1?'var(--info-bg)':'var(--bg)'}}>
+          <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:12}}>WFP / donor treasury</div>
+          <div style={{textAlign:'center',padding:'12px 0'}}>
+            <i className="ti ti-building-bank" style={{fontSize:48,color:'var(--info)'}} aria-hidden="true"/>
+            <div style={{fontSize:15,fontWeight:500,marginTop:10}}>WFP / ECHO</div>
+            <div style={{fontSize:12,color:'var(--text2)'}}>USD held in treasury account</div>
+          </div>
+          <div style={{marginTop:10}}>
+            {[['Fund source','ECHO EU Humanitarian'],['Currency','USD → USDC'],['Amount','$600,000'],['Cycle','December 2025 · Baidoa']].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span>
+              </div>
+            ))}
+          </div>
+          {stage>=1&&<div className="fade-up" style={{marginTop:12,padding:'8px',background:'var(--ok-bg)',borderRadius:8,fontSize:12,color:'var(--ok)',textAlign:'center'}}><i className="ti ti-check" aria-hidden="true"/> $600K authorised for USDC conversion</div>}
+        </div>
+
+        <Arrow active={stage>=2}/>
+
+        {/* Algorand USDC */}
+        <div className="flow-col" style={{borderColor:stage>=2?'var(--purple-bdr)':'var(--bdr)',background:stage>=2?'var(--purple-bg)':'var(--bg)'}}>
+          <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:12}}>Algorand — USDC smart contract</div>
+          <div style={{textAlign:'center',padding:'12px 0'}}>
+            <i className="ti ti-link" style={{fontSize:48,color:'var(--purple)'}} aria-hidden="true"/>
+            <div style={{fontSize:15,fontWeight:500,marginTop:10,color:'var(--purple)'}}>Algorand blockchain</div>
+            <div style={{fontSize:12,color:'var(--text2)'}}>USDC smart contract</div>
+          </div>
+          {stage>=2?<div className="slide-r">
+            {[['Contract address','ALGO-SOMNEXUS-BDO-2025-12'],['USDC locked','$600,000.00'],['Release trigger','SmartVista verified tx event'],['Condition','fingerprint_match = TRUE'],['Funds per beneficiary','$50/cycle (configurable)']].map(([k,v])=>(
+              <div key={k} style={{display:'flex',gap:10,padding:'5px 0',borderBottom:'0.5px solid var(--purple-bdr)',fontSize:11}}>
+                <span style={{color:'var(--purple)',minWidth:120,flexShrink:0}}>{k}</span>
+                <span style={{color:'var(--purple)',fontWeight:500,fontFamily:'monospace',wordBreak:'break-all'}}>{v}</span>
+              </div>
+            ))}
+          </div>:<div style={{fontSize:12,color:'var(--text3)',textAlign:'center',padding:'20px 0'}}>Awaiting USDC transfer...</div>}
+        </div>
+
+        <Arrow active={stage>=3}/>
+
+        {/* SmartVista VAM */}
+        <div className="flow-col" style={{borderColor:stage>=3?'var(--ok-bdr)':'var(--bdr)',background:stage>=3?'var(--ok-bg)':'var(--bg)'}}>
+          <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:12}}>SmartVista VAM engine</div>
+          <div style={{textAlign:'center',padding:'12px 0'}}>
+            <i className="ti ti-server" style={{fontSize:48,color:stage>=3?'var(--ok)':'var(--text3)'}} aria-hidden="true"/>
+            <div style={{fontSize:15,fontWeight:500,marginTop:10}}>SmartVista VAM</div>
+            <div style={{fontSize:12,color:'var(--text2)'}}>Virtual account management</div>
+          </div>
+          {stage>=3?<div className="fade-up">
+            {[['Beneficiary wallets','12,000 created'],['Merchant wallets','47 active'],['Rules engine','Food only · max $100/month'],['Settlement bank','Somali settlement bank'],['Algorand sync','Live event listener active']].map(([k,v])=>(
+              <div key={k} style={{display:'flex',gap:10,padding:'5px 0',borderBottom:'0.5px solid var(--ok-bdr)',fontSize:11}}>
+                <span style={{color:'var(--ok)',minWidth:130,flexShrink:0}}>{k}</span>
+                <span style={{color:'var(--ok)',fontWeight:500}}>{v}</span>
+              </div>
+            ))}
+          </div>:<div style={{fontSize:12,color:'var(--text3)',textAlign:'center',padding:'20px 0'}}>Awaiting Algorand funding...</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 2: WFP Admin ─── */
+function WFPScreen(){
+  const [loaded,setLoaded]=useState(false);
+  const [count,setCount]=useState(0);
+  useEffect(()=>{if(loaded){const t=setInterval(()=>setCount(c=>{if(c>=12000){clearInterval(t);return 12000;}return c+120;}),30);return()=>clearInterval(t);}},[loaded]);
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:18}}>
+        <M label="Beneficiary wallets" value={loaded?count.toLocaleString():'—'} icon="ti-users" color={loaded?'var(--ok)':'var(--text3)'}/>
+        <M label="Funds loaded per wallet" value="$50 / month" icon="ti-coin"/>
+        <M label="Rules applied" value="3 active rules" icon="ti-shield-check" color="var(--info)"/>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-adjustments" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Aid disbursement rules</div>
+          <div className="card-bd">
+            {[
+              {rule:'Category restriction',val:'Food & nutrition only',ok:true},
+              {rule:'Monthly cap per household',val:'$100 maximum',ok:true},
+              {rule:'Merchant whitelist',val:'WFP-verified merchants only',ok:true},
+              {rule:'Cycle window',val:'1–31 December 2025',ok:true},
+              {rule:'One redemption per beneficiary',val:'Cycle flag prevents duplicates',ok:true},
+              {rule:'Biometric required',val:'PIN or fingerprint at point of sale',ok:true},
+            ].map(r=>(
+              <div key={r.rule} style={{display:'flex',gap:10,padding:'7px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <i className="ti ti-check" style={{fontSize:13,color:'var(--ok)',marginTop:1,flexShrink:0}} aria-hidden="true"/>
+                <div><span style={{fontWeight:500}}>{r.rule}</span><span style={{color:'var(--text2)'}}> — {r.val}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-map-pin" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Target beneficiaries — Baidoa</div>
+          <div className="card-bd">
+            {[
+              {camp:'IDP Camp 1 — North Baidoa',hh:1840,status:'ready'},
+              {camp:'IDP Camp 2 — Market Area',hh:2150,status:'ready'},
+              {camp:'IDP Camp 3 — East Baidoa',hh:3200,status:'ready'},
+              {camp:'IDP Camp 4 — Deynile Road',hh:2810,status:'ready'},
+              {camp:'Host community — Baidoa town',hh:2000,status:'ready'},
+            ].map(c=>(
+              <div key={c.camp} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <span>{c.camp}</span>
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                  <span style={{color:'var(--text2)'}}>{c.hh.toLocaleString()} HH</span>
+                  <span style={{fontSize:10,padding:'2px 7px',borderRadius:20,background:'var(--ok-bg)',color:'var(--ok)'}}>{c.status}</span>
+                </div>
+              </div>
+            ))}
+            <div style={{marginTop:14}}>
+              <button onClick={()=>{setLoaded(true);}} disabled={loaded} style={{width:'100%',fontSize:13,fontWeight:500,background:loaded?'var(--ok-bg)':undefined,color:loaded?'var(--ok)':undefined}}>
+                {loaded?<><i className="ti ti-check" aria-hidden="true"/> $600,000 loaded to 12,000 wallets</>:<><i className="ti ti-bolt" aria-hidden="true"/> Load funds to beneficiary wallets</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {loaded&&(
+        <div className="fade-up card" style={{border:'0.5px solid var(--ok-bdr)',background:'var(--ok-bg)'}}>
+          <div className="card-bd" style={{display:'flex',alignItems:'center',gap:16}}>
+            <i className="ti ti-circle-check" style={{fontSize:32,color:'var(--ok)',flexShrink:0}} aria-hidden="true"/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:500,color:'var(--ok)',marginBottom:4}}>Funds disbursed — {count.toLocaleString()} wallets loaded</div>
+              <div style={{fontSize:12,color:'var(--ok)'}}>Each beneficiary now has $50 in their SmartVista VAM wallet · Balances visible on Algorand · Ready for redemption at approved merchants</div>
+            </div>
+            <div style={{fontSize:24,fontWeight:500,color:'var(--ok)'}}>$600,000</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── SCREEN 3: Agent Enrolment App ─── */
+function EnrolScreen(){
+  const [stage,setStage]=useState(0);
+  const [running,setRunning]=useState(false);
+  const run=async()=>{
+    setRunning(true);
+    setStage(1);await new Promise(r=>setTimeout(r,2000));
+    setStage(2);await new Promise(r=>setTimeout(r,1000));
+    setStage(3);setRunning(false);
+  };
+  const households=[
+    {id:'SO-BDO-4819',name:'Amina Warsame',done:true},
+    {id:'SO-BDO-4820',name:'Cali Maxamed',done:true},
+    {id:'SO-BDO-4821',name:'Fatuma Hassan',current:true,done:stage>=3},
+    {id:'SO-BDO-4822',name:'Hodan Jama',done:false},
+    {id:'SO-BDO-4823',name:'Xasan Muuse',done:false},
+  ];
+  return(
+    <div style={{display:'grid',gridTemplateColumns:'280px 1fr',gap:18}}>
+      <div className="phone">
+        <div className="phone-status">
+          <span>09:41</span><span>◈ SmartVista Agent</span><span>▋▋▋ 🔋</span>
+        </div>
+        <div className="phone-appbar" style={{background:'var(--info-bg)'}}>
+          <i className="ti ti-device-mobile" style={{fontSize:15,color:'var(--info)'}} aria-hidden="true"/>
+          <div><div style={{fontSize:12,fontWeight:500,color:'var(--info)'}}>SmartVista — Agent app</div><div style={{fontSize:10,color:'var(--info)'}}>Abdi Hassan · Dalmar Solutions</div></div>
+        </div>
+        <div className="phone-body" style={{flex:1}}>
+          <div style={{padding:'8px 14px',borderBottom:'0.5px solid var(--bdr)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <span style={{fontSize:12,fontWeight:500}}>Camp 3 — household list</span>
+            <span style={{fontSize:10,color:'var(--text3)'}}>14 remaining</span>
+          </div>
+          {households.map(h=>(
+            <div key={h.id} style={{padding:'9px 14px',display:'flex',alignItems:'center',gap:10,
+              background:h.current&&stage===1?'var(--warn-bg)':h.current&&stage===0?'var(--info-bg)':'transparent',
+              borderLeft:h.done?'3px solid var(--ok-bdr)':h.current&&stage===1?'3px solid var(--warn-bdr)':h.current?'3px solid var(--info-bdr)':'3px solid transparent',
+              borderBottom:'0.5px solid var(--bdr)'}}>
+              <i className={`ti ${h.done?'ti-check':'ti-circle'}`} style={{fontSize:14,color:h.done?'var(--ok)':h.current&&stage===1?'var(--warn)':h.current?'var(--info)':'var(--text3)'}} aria-hidden="true"/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:h.current?500:400}}>{h.name}</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>{h.id}</div>
+              </div>
+              {h.done&&<span style={{fontSize:9,background:'var(--ok-bg)',color:'var(--ok)',padding:'2px 5px',borderRadius:4}}>enrolled</span>}
+            </div>
+          ))}
+          <div style={{padding:'12px 14px',borderTop:'0.5px solid var(--bdr)',marginTop:'auto'}}>
+            {stage===0&&<button onClick={run} style={{width:'100%',fontSize:13}}><i className="ti ti-fingerprint" aria-hidden="true"/> Enrol Fatuma Hassan</button>}
+            {stage===1&&(
+              <div style={{textAlign:'center'}}>
+                <div style={{fontSize:12,fontWeight:500,color:'var(--warn)',marginBottom:10}}>Capturing biometric...</div>
+                <div style={{position:'relative',width:64,height:64,margin:'0 auto'}}>
+                  <i className="ti ti-fingerprint" style={{fontSize:64,color:'var(--warn)'}} aria-hidden="true"/>
+                  <div className="scan-bar"/>
+                </div>
+                <div style={{fontSize:10,color:'var(--text3)',marginTop:8}}>Ask Fatuma to place finger on reader</div>
+              </div>
+            )}
+            {stage===2&&(
+              <div style={{textAlign:'center'}}>
+                <div style={{fontSize:12,fontWeight:500,color:'var(--info)',marginBottom:8}}>Tap NFC card to link wallet...</div>
+                <div style={{position:'relative',width:48,height:48,margin:'0 auto'}}>
+                  <i className="ti ti-credit-card" style={{fontSize:48,color:'var(--info)'}} aria-hidden="true"/>
+                  <div className="nfc-ring"/><div className="nfc-ring2"/>
+                </div>
+              </div>
+            )}
+            {stage>=3&&(
+              <div className="fade-up" style={{textAlign:'center'}}>
+                <i className="ti ti-circle-check" style={{fontSize:36,color:'var(--ok)'}} aria-hidden="true"/>
+                <div style={{fontSize:12,fontWeight:500,color:'var(--ok)',margin:'6px 0 3px'}}>Fatuma Hassan — enrolled</div>
+                <div style={{fontSize:10,color:'var(--text3)',marginBottom:8}}>Wallet created · NFC card linked · Algorand logged</div>
+                <button onClick={()=>{setStage(0);setRunning(false);}} style={{fontSize:11}}>Reset</button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="phone-tabbar">
+          {[{icon:'ti-home',l:'Home'},{icon:'ti-users',l:'Households'},{icon:'ti-chart-bar',l:'Stats'},{icon:'ti-settings',l:'Settings'}].map(t=>(
+            <div key={t.l} className="tab-btn"><i className={`ti ${t.icon}`} style={{fontSize:16}} aria-hidden="true"/>{t.l}</div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-credit-card" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>NFC / QR card — what's on it</div>
+          <div className="card-bd">
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <div>
+                {/* NFC card visual */}
+                <div style={{background:'var(--info)',borderRadius:10,padding:'16px',color:'#fff',marginBottom:14,position:'relative',overflow:'hidden'}}>
+                  <div style={{fontSize:11,opacity:0.7,marginBottom:10}}>Somnexus · WFP Somalia</div>
+                  <div style={{fontSize:10,fontFamily:'monospace',marginBottom:16,opacity:0.8}}>**** **** **** 4821</div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+                    <div><div style={{fontSize:9,opacity:0.7}}>Beneficiary</div><div style={{fontSize:12,fontWeight:500}}>F. Hassan</div></div>
+                    <i className="ti ti-wifi" style={{fontSize:22,opacity:0.6,transform:'rotate(90deg)'}} aria-hidden="true"/>
+                  </div>
+                </div>
+                {[['Contains','Token only — NOT real money'],['Linked to','SmartVista VAM wallet'],['Biometric','Fingerprint or PIN at POS'],['Also available','QR code card alternative']].map(([k,v])=>(
+                  <div key={k} style={{display:'flex',gap:10,padding:'5px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:11}}>
+                    <span style={{color:'var(--text2)',minWidth:80,flexShrink:0}}>{k}</span><span style={{fontWeight:500}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{fontSize:12,fontWeight:500,marginBottom:10}}>Agent incentive model</div>
+                {[
+                  ['Registration pay','$0 — earns nothing from fake enrolments'],
+                  ['Transaction pay','0.4% basis points on every transaction'],
+                  ['200 households × $50/mo','= $40/month supplemental income'],
+                  ['GPS logged','Each enrolment geo-tagged to camp'],
+                  ['Algorand logged','Enrolment event immutably recorded'],
+                ].map(([k,v])=>(
+                  <div key={k} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                    <i className="ti ti-check" style={{fontSize:12,color:'var(--ok)',flexShrink:0,marginTop:2}} aria-hidden="true"/>
+                    <div><span style={{fontWeight:500}}>{k}</span><span style={{color:'var(--text2)'}}> — {v}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-users" style={{fontSize:14}} aria-hidden="true"/>Agent company model</div>
+          <div className="card-bd">
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+              {[{n:'Dalmar Solutions',ag:12,reg:403,earn:'$161'},{n:'Horn Aid Network',ag:9,reg:265,earn:'$106'},{n:'Baidoa Field Co.',ag:6,reg:143,earn:'$57'}].map(c=>(
+                <div key={c.n} style={{background:'var(--bg2)',borderRadius:8,padding:'10px 12px'}}>
+                  <div style={{fontSize:12,fontWeight:500,marginBottom:5}}>{c.n}</div>
+                  <div style={{fontSize:11,color:'var(--text2)'}}>Agents: {c.ag} · Enrolled: {c.reg}</div>
+                  <div style={{fontSize:13,color:'var(--ok)',fontWeight:500,marginTop:4}}>{c.earn} earned</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 4: MERCHANT APP (HERO) ─── */
+function MerchantScreen(){
+  const [stage,setStage]=useState(0);
+  const [amount,setAmount]=useState('');
+  const [pin,setPin]=useState(0);
+  const [pinRunning,setPinRunning]=useState(false);
+  const [running,setRunning]=useState(false);
+  const [balance,setBalance]=useState(284.50);
+  const [txId]=useState('SV-2025-'+Date.now().toString().slice(-6));
+  const [tab,setTab]=useState(0);
+
+  const runFromAmount=async()=>{
+    setStage(4);setPinRunning(true);
+    for(let i=1;i<=4;i++){await new Promise(r=>setTimeout(r,400));setPin(i);}
+    setPinRunning(false);
+    setStage(5);setRunning(true);
+    await new Promise(r=>setTimeout(r,2500));
+    setBalance(b=>b+parseFloat(amount||25));
+    setStage(6);setRunning(false);
+  };
+
+  const addDigit=d=>{if(amount.length<6)setAmount(a=>a+d)};
+  const delDigit=()=>setAmount(a=>a.slice(0,-1));
+  const reset=()=>{setStage(0);setAmount('');setPin(0);setPinRunning(false);setRunning(false);};
+
+  const vamChecks=[
+    {text:'Merchant wallet verified',done:stage>=5},
+    {text:'Beneficiary wallet found',done:stage>=5},
+    {text:'Entitlement balance checked ($50 available)',done:stage>=5},
+    {text:'Category rule — food merchant ✓',done:stage>=5},
+    {text:'Monthly cap — $50 remaining ✓',done:stage>=5},
+    {text:'PIN verification',done:stage>=6,active:stage===5},
+    {text:'Transaction posted to wallets',done:stage>=6,active:false},
+    {text:'Algorand event fired',done:stage>=6},
+  ];
+
+  return(
+    <div style={{display:'grid',gridTemplateColumns:'280px 1fr',gap:18}}>
+      {/* MERCHANT PHONE */}
+      <div className="phone">
+        <div className="phone-status" style={{background:'#1a2634'}}>
+          <span>09:47</span><span>SmartVista Merchant</span><span>▋▋▋ 🔋</span>
+        </div>
+        <div className="phone-appbar">
+          {stage===0&&<i className="ti ti-menu-2" style={{fontSize:16,color:'var(--text2)'}} aria-hidden="true"/>}
+          {stage>0&&stage<6&&<button onClick={()=>setStage(s=>Math.max(0,s-1))} style={{border:'none',background:'none',padding:0,cursor:'pointer'}} aria-label="back"><i className="ti ti-arrow-left" style={{fontSize:16,color:'var(--text2)'}} aria-hidden="true"/></button>}
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,fontWeight:500}}>SmartVista</div>
+            <div style={{fontSize:10,color:'var(--text3)'}}>Yusuf's Food Shop · Baidoa</div>
+          </div>
+          <i className="ti ti-bell" style={{fontSize:16,color:'var(--text2)'}} aria-hidden="true"/>
+        </div>
+
+        <div className="phone-body" style={{flex:1,overflowY:'auto'}}>
+          {/* Stage 0: Home */}
+          {stage===0&&(
+            <div>
+              <div className="wallet-card" style={{background:'var(--info)',borderColor:'var(--info)'}}>
+                <div style={{fontSize:10,color:'rgba(255,255,255,0.7)',marginBottom:4}}>Merchant wallet balance</div>
+                <div style={{fontSize:28,fontWeight:500,color:'#fff'}}>${balance.toFixed(2)}</div>
+                <div style={{fontSize:10,color:'rgba(255,255,255,0.7)',marginTop:4}}>SmartVista VAM · Virtual account</div>
+              </div>
+              <div style={{padding:'0 12px 12px'}}>
+                <button onClick={()=>setStage(1)} style={{width:'100%',fontSize:14,fontWeight:500,padding:'13px',background:'var(--info)',color:'#fff',border:'none',borderRadius:10,marginBottom:10}}>
+                  <i className="ti ti-credit-card" aria-hidden="true"/> Accept payment
+                </button>
+                <div style={{fontSize:11,fontWeight:500,color:'var(--text2)',marginBottom:8}}>Recent transactions</div>
+                {[{id:'FH-4821',amt:25,t:'09:47'},{id:'FH-3104',amt:50,t:'09:45'},{id:'FH-2847',amt:50,t:'09:43'}].map(tx=>(
+                  <div key={tx.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                    <div><div style={{fontWeight:500}}>{tx.id}</div><div style={{fontSize:10,color:'var(--text3)'}}>{tx.t}</div></div>
+                    <span style={{color:'var(--ok)',fontWeight:500}}>+${tx.amt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Stage 1: NFC Ready */}
+          {stage===1&&(
+            <div style={{textAlign:'center',padding:'30px 16px'}}>
+              <div style={{fontSize:13,fontWeight:500,marginBottom:8}}>Accept payment</div>
+              <div style={{fontSize:11,color:'var(--text2)',marginBottom:30}}>Ask beneficiary to tap their NFC card or scan QR code</div>
+              <div style={{position:'relative',width:80,height:80,margin:'0 auto 20px'}}>
+                <i className="ti ti-device-mobile-vibration" style={{fontSize:80,color:'var(--info)'}} aria-hidden="true"/>
+                <div className="nfc-ring"/><div className="nfc-ring2"/>
+              </div>
+              <div style={{fontSize:11,color:'var(--text3)',marginBottom:20}}>Hold card near phone</div>
+              <div style={{display:'flex',gap:8,justifyContent:'center'}}>
+                <button onClick={()=>setStage(2)} style={{fontSize:13,background:'var(--info)',color:'#fff',border:'none',padding:'10px 20px',borderRadius:8}}>
+                  <i className="ti ti-wifi" aria-hidden="true"/> Simulate card tap
+                </button>
+                <button style={{fontSize:12}} onClick={()=>setStage(0)}>Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 2: Card detected */}
+          {stage===2&&(
+            <div className="fade-up" style={{padding:'16px 14px'}}>
+              <div style={{padding:'12px',background:'var(--ok-bg)',borderRadius:8,border:'0.5px solid var(--ok-bdr)',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
+                <i className="ti ti-circle-check" style={{fontSize:18,color:'var(--ok)'}} aria-hidden="true"/>
+                <div><div style={{fontSize:12,fontWeight:500,color:'var(--ok)'}}>Card detected</div><div style={{fontSize:10,color:'var(--ok)'}}>Beneficiary wallet found in SmartVista VAM</div></div>
+              </div>
+              {[['Beneficiary','Fatuma H. ••••'],['Wallet ID','SO-BDO-4821'],['Status','Active ✓'],['Monthly limit','$100.00'],['Used this cycle','$50.00'],['Available','$50.00']].map(([k,v])=>(
+                <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                  <span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500,color:v.includes('$50.00')&&k==='Available'?'var(--ok)':undefined}}>{v}</span>
+                </div>
+              ))}
+              <button onClick={()=>setStage(3)} style={{width:'100%',marginTop:14,fontSize:13,fontWeight:500,background:'var(--info)',color:'#fff',border:'none',padding:'11px',borderRadius:8}}>Enter amount</button>
+            </div>
+          )}
+
+          {/* Stage 3: Amount entry */}
+          {stage===3&&(
+            <div>
+              <div style={{textAlign:'center',padding:'20px 14px 14px'}}>
+                <div style={{fontSize:11,color:'var(--text2)',marginBottom:8}}>Enter amount</div>
+                <div style={{fontSize:36,fontWeight:500,letterSpacing:'-1px',color:amount?'var(--text)':'var(--text3)',minHeight:50}}>
+                  ${amount||'0.00'}
+                </div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>Maximum available: $50.00</div>
+              </div>
+              <div style={{height:'0.5px',background:'var(--bdr)',margin:'0 14px 16px'}}/>
+              <div className="keypad">
+                {['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=>(
+                  <button key={k} className="key-btn" onClick={()=>k==='⌫'?delDigit():addDigit(k)}>{k}</button>
+                ))}
+              </div>
+              <div style={{padding:'14px'}}>
+                <button onClick={runFromAmount} disabled={!amount||parseFloat(amount)<=0||parseFloat(amount)>50} style={{width:'100%',fontSize:13,fontWeight:500,background:'var(--info)',color:'#fff',border:'none',padding:'12px',borderRadius:8}}>
+                  Confirm ${amount||'0.00'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 4: PIN */}
+          {stage===4&&(
+            <div style={{textAlign:'center',padding:'30px 16px'}}>
+              <i className="ti ti-lock" style={{fontSize:36,color:'var(--info)',marginBottom:14}} aria-hidden="true"/>
+              <div style={{fontSize:13,fontWeight:500,marginBottom:6}}>Beneficiary PIN</div>
+              <div style={{fontSize:11,color:'var(--text2)',marginBottom:24}}>Ask Fatuma to enter her 4-digit PIN</div>
+              <div style={{display:'flex',gap:14,justifyContent:'center',marginBottom:24}}>
+                {[1,2,3,4].map(i=>(
+                  <div key={i} className={`pin-dot ${pin>=i?'filled':''}`} style={{animationDelay:`${(i-1)*0.1}s`}}/>
+                ))}
+              </div>
+              <div style={{fontSize:10,color:'var(--text3)',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
+                <i className="ti ti-shield-check" style={{fontSize:12}} aria-hidden="true"/> Secure PIN entry · Not visible to merchant
+              </div>
+            </div>
+          )}
+
+          {/* Stage 5: Processing */}
+          {stage===5&&(
+            <div style={{textAlign:'center',padding:'30px 16px'}}>
+              <i className="ti ti-loader-2 spin" style={{fontSize:40,color:'var(--info)',marginBottom:16}} aria-hidden="true"/>
+              <div style={{fontSize:13,fontWeight:500,marginBottom:16}}>Processing...</div>
+              <div style={{textAlign:'left',background:'var(--bg2)',borderRadius:8,padding:'12px'}}>
+                {vamChecks.slice(0,6).map((c,i)=><CheckStep key={i} done={c.done} active={c.active} text={c.text}/>)}
+              </div>
+            </div>
+          )}
+
+          {/* Stage 6: Approved */}
+          {stage===6&&(
+            <div className="fade-up" style={{textAlign:'center',padding:'20px 14px'}}>
+              <div className="check-pop" style={{width:64,height:64,borderRadius:'50%',background:'var(--ok-bg)',border:'2px solid var(--ok-bdr)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px'}}>
+                <i className="ti ti-check" style={{fontSize:32,color:'var(--ok)'}} aria-hidden="true"/>
+              </div>
+              <div style={{fontSize:16,fontWeight:500,color:'var(--ok)',marginBottom:4}}>Transaction approved</div>
+              <div style={{fontSize:24,fontWeight:500,color:'var(--ok)',marginBottom:14}}>+${amount||25}</div>
+              {[['Beneficiary','Fatuma H. ••••4821'],['Amount',`$${amount||25}.00`],['Merchant wallet',`$${balance.toFixed(2)} (updated)`],['Transaction ID',txId],['Time',new Date().toTimeString().slice(0,8)],['Algorand','Event fired ✓']].map(([k,v])=>(
+                <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:11}}>
+                  <span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500,fontFamily:k==='Transaction ID'||k==='Algorand'?'monospace':undefined,color:k==='Algorand'?'var(--purple)':undefined}}>{v}</span>
+                </div>
+              ))}
+              <div style={{display:'flex',gap:8,marginTop:14}}>
+                <button onClick={reset} style={{flex:1,fontSize:12}}>Done</button>
+                <button style={{flex:1,fontSize:12}}><i className="ti ti-printer" aria-hidden="true"/> Receipt</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="phone-tabbar">
+          {[{icon:'ti-home',l:'Home',i:0},{icon:'ti-credit-card',l:'Payments',i:1},{icon:'ti-wallet',l:'Wallet',i:2},{icon:'ti-settings',l:'Settings',i:3}].map(t=>(
+            <div key={t.l} className={`tab-btn${tab===t.i?' active-tab':''}`} onClick={()=>setTab(t.i)}><i className={`ti ${t.icon}`} style={{fontSize:16}} aria-hidden="true"/>{t.l}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right panel — VAM + steps */}
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-server" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>SmartVista VAM — real-time validation</div>
+          <div className="card-bd">
+            <div style={{marginBottom:16}}>
+              {vamChecks.map((c,i)=><CheckStep key={i} done={c.done} active={c.active} text={c.text}/>)}
+            </div>
+            {stage>=6&&(
+              <div className="fade-up" style={{padding:'10px',background:'var(--purple-bg)',borderRadius:8,border:'0.5px solid var(--purple-bdr)'}}>
+                <div style={{fontSize:12,fontWeight:500,color:'var(--purple)',marginBottom:4}}><i className="ti ti-link" aria-hidden="true"/> Algorand event confirmed</div>
+                <div style={{fontSize:10,fontFamily:'monospace',color:'var(--purple)'}}>TX: {txId} · fingerprint_match: TRUE · amount: ${amount||25} · {new Date().toTimeString().slice(0,8)}</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-wallet" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Wallet movement — this transaction</div>
+          <div className="card-bd">
+            <div style={{display:'grid',gridTemplateColumns:'1fr 28px 1fr',gap:8,alignItems:'center'}}>
+              <div style={{background:'var(--bg2)',borderRadius:8,padding:'12px',textAlign:'center'}}>
+                <div style={{fontSize:11,color:'var(--text2)',marginBottom:4}}>Beneficiary wallet</div>
+                <div style={{fontSize:11,color:'var(--text3)'}}>SO-BDO-4821</div>
+                <div style={{fontSize:20,fontWeight:500,color:'var(--err)',marginTop:8}}>{stage>=6?`-$${amount||25}`:'$50.00'}</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>{stage>=6?`$${50-parseFloat(amount||25)} remaining`:'Available'}</div>
+              </div>
+              <div style={{textAlign:'center'}}><i className="ti ti-arrow-right" style={{fontSize:16,color:stage>=6?'var(--ok)':'var(--text3)'}} aria-hidden="true"/></div>
+              <div style={{background:stage>=6?'var(--ok-bg)':'var(--bg2)',borderRadius:8,padding:'12px',textAlign:'center',border:stage>=6?'0.5px solid var(--ok-bdr)':'0.5px solid var(--bdr)'}}>
+                <div style={{fontSize:11,color:'var(--text2)',marginBottom:4}}>Merchant wallet</div>
+                <div style={{fontSize:11,color:'var(--text3)'}}>Yusuf Ahmed</div>
+                <div style={{fontSize:20,fontWeight:500,color:stage>=6?'var(--ok)':'var(--text)',marginTop:8}}>{stage>=6?`+$${amount||25}`:''}{stage<6&&'$284.50'}</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>{stage>=6?`$${balance.toFixed(2)} total`:'SmartVista VAM'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-shield-check" style={{fontSize:14,color:'var(--ok)'}} aria-hidden="true"/>Transaction steps — 7-step merchant flow</div>
+          <div className="card-bd">
+            {['Merchant opens SmartVista app','Beneficiary taps NFC/QR card','SmartVista VAM validates beneficiary','Merchant enters amount','Beneficiary enters PIN','SmartVista validates entitlement from wallet','Transaction approved · merchant provides goods'].map((s,i)=>(
+              <div key={i} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <span style={{minWidth:18,height:18,borderRadius:'50%',background:stage>=i+1?'var(--ok-bg)':'var(--bg2)',color:stage>=i+1?'var(--ok)':'var(--text3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:500,flexShrink:0}}>{i+1}</span>
+                <span style={{color:stage>=i+1?'var(--text)':'var(--text3)'}}>{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 5: VAM Engine ─── */
+function VAMScreen(){
+  return(
+    <div>
+      <div style={{background:'var(--info-bg)',border:'0.5px solid var(--info-bdr)',borderRadius:12,padding:'14px 18px',marginBottom:18,display:'flex',alignItems:'center',gap:12}}>
+        <i className="ti ti-server" style={{fontSize:28,color:'var(--info)'}} aria-hidden="true"/>
+        <div>
+          <div style={{fontSize:14,fontWeight:500,color:'var(--info)'}}>SmartVista VAM — Virtual Account Management engine</div>
+          <div style={{fontSize:12,color:'var(--info)'}}>Creates and manages all wallets for beneficiaries AND merchants · Central orchestration for all transactions</div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:18}}>
+        <M label="Beneficiary wallets" value="12,000" icon="ti-users" color="var(--info)"/>
+        <M label="Merchant wallets" value="47" icon="ti-store" color="var(--ok)"/>
+        <M label="Transactions today" value="1,247" icon="ti-bolt" color="var(--warn)"/>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:18}}>
+        {[
+          {title:'Wallet creation',icon:'ti-wallet',items:['Auto-create on enrolment','Linked to biometric profile','VAM virtual account','Algorand address assigned']},
+          {title:'Balance management',icon:'ti-coin',items:['Funds loaded by WFP/NGO','Real-time balance updates','Monthly cap enforcement','Category restrictions']},
+          {title:'Limits & rules engine',icon:'ti-adjustments',items:['Food category only','$100/month max per HH','Approved merchants only','Cycle window control']},
+          {title:'Transaction posting',icon:'ti-bolt',items:['NFC/QR card tap trigger','PIN or biometric gate','Instant wallet-to-wallet','Audit log per transaction']},
+          {title:'Settlement to bank / EVC',icon:'ti-building-bank',items:['Merchant → bank (9A)','Merchant → EVC agent (9B)','Same day or T+1','Liquidity agent float']},
+          {title:'Reporting & analytics',icon:'ti-chart-bar',items:['Real-time donor dashboard','Fraud monitoring alerts','Transaction audit trail','Algorand sync events']},
+        ].map(box=>(
+          <div key={box.title} className="card" style={{marginBottom:0}}>
+            <div className="card-hd"><i className={`ti ${box.icon}`} style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>{box.title}</div>
+            <div className="card-bd" style={{padding:'12px 14px'}}>
+              {box.items.map(it=>(
+                <div key={it} style={{display:'flex',gap:8,padding:'4px 0',fontSize:12}}>
+                  <i className="ti ti-point-filled" style={{fontSize:8,color:'var(--info)',marginTop:4,flexShrink:0}} aria-hidden="true"/>{it}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <div className="card-hd"><i className="ti ti-arrows-exchange" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Transaction architecture — wallet flow</div>
+        <div className="card-bd">
+          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,alignItems:'center'}}>
+            {[
+              {label:'WFP / NGO',sub:'Funds allocation',icon:'ti-building-bank',c:'var(--info)'},
+              null,
+              {label:'SmartVista VAM',sub:'Beneficiary + merchant wallets',icon:'ti-server',c:'var(--purple)'},
+              null,
+              {label:'Algorand',sub:'Audit + settlement layer',icon:'ti-link',c:'var(--purple)'},
+            ].map((n,i)=>n===null?<div key={i} style={{textAlign:'center'}}><i className="ti ti-arrow-right" style={{fontSize:16,color:'var(--text3)'}} aria-hidden="true"/></div>:(
+              <div key={i} className="vam-node">
+                <i className={`ti ${n.icon}`} style={{fontSize:24,color:n.c,display:'block',margin:'0 auto 8px'}} aria-hidden="true"/>
+                <div style={{fontSize:12,fontWeight:500}}>{n.label}</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>{n.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:12,display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,alignItems:'center'}}>
+            {[
+              {label:'Beneficiary',sub:'NFC/QR card · PIN',icon:'ti-user',c:'var(--ok)'},
+              null,
+              {label:'Merchant app',sub:'SmartVista Android',icon:'ti-device-mobile',c:'var(--warn)'},
+              null,
+              {label:'Settlement bank',sub:'EVC / bank account',icon:'ti-cash',c:'var(--ok)'},
+            ].map((n,i)=>n===null?<div key={i} style={{textAlign:'center'}}><i className="ti ti-arrow-right" style={{fontSize:16,color:'var(--text3)'}} aria-hidden="true"/></div>:(
+              <div key={i} className="vam-node">
+                <i className={`ti ${n.icon}`} style={{fontSize:24,color:n.c,display:'block',margin:'0 auto 8px'}} aria-hidden="true"/>
+                <div style={{fontSize:12,fontWeight:500}}>{n.label}</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>{n.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 6: Merchant Cashout ─── */
+function CashoutScreen(){
+  const [path,setPath]=useState('9a');
+  return(
+    <div>
+      <div style={{display:'flex',gap:8,marginBottom:18}}>
+        <button onClick={()=>setPath('9a')} style={{padding:'8px 20px',background:path==='9a'?'var(--info)':'var(--bg)',color:path==='9a'?'#fff':'var(--text)',border:`0.5px solid ${path==='9a'?'var(--info)':'var(--bdr2)'}`,borderRadius:8,fontWeight:500,fontSize:13}}>
+          9A — Merchant has bank account
+        </button>
+        <button onClick={()=>setPath('9b')} style={{padding:'8px 20px',background:path==='9b'?'var(--warn)':'var(--bg)',color:path==='9b'?'#fff':'var(--text)',border:`0.5px solid ${path==='9b'?'var(--warn)':'var(--bdr2)'}`,borderRadius:8,fontWeight:500,fontSize:13}}>
+          9B — No bank account (EVC agent)
+        </button>
+      </div>
+
+      {path==='9a'&&(
+        <div className="fade-up">
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+            <M label="Settlement method" value="Bank transfer" icon="ti-building-bank" color="var(--info)"/>
+            <M label="Settlement time" value="Same day / T+1" icon="ti-clock" color="var(--ok)"/>
+            <M label="Fee" value="0%" icon="ti-coin" color="var(--ok)"/>
+          </div>
+          <div className="flow3">
+            <div className="flow-col" style={{background:'var(--info-bg)',borderColor:'var(--info-bdr)'}}>
+              <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:10}}>Merchant wallet (VAM)</div>
+              <i className="ti ti-wallet" style={{fontSize:32,color:'var(--info)',display:'block',textAlign:'center',margin:'10px 0'}} aria-hidden="true"/>
+              <div style={{fontSize:13,fontWeight:500,textAlign:'center'}}>Yusuf Ahmed</div>
+              <div style={{fontSize:12,color:'var(--info)',textAlign:'center',fontWeight:500,marginTop:4}}>$284.50 available</div>
+              <div style={{fontSize:11,color:'var(--text2)',textAlign:'center',marginTop:4}}>SmartVista VAM digital USD</div>
+            </div>
+            <Arrow active={true}/>
+            <div className="flow-col">
+              <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:10}}>SmartVista settlement</div>
+              <i className="ti ti-server" style={{fontSize:32,color:'var(--purple)',display:'block',textAlign:'center',margin:'10px 0'}} aria-hidden="true"/>
+              <div style={{fontSize:12,textAlign:'center',marginBottom:10}}>Merchant requests cashout</div>
+              {['Amount validated','Bank account verified','Settlement instruction sent','Reconciliation logged'].map(s=>(
+                <div key={s} style={{display:'flex',gap:6,padding:'4px 0',fontSize:11}}><i className="ti ti-check" style={{fontSize:12,color:'var(--ok)'}} aria-hidden="true"/>{s}</div>
+              ))}
+            </div>
+            <Arrow active={true}/>
+            <div className="flow-col" style={{background:'var(--ok-bg)',borderColor:'var(--ok-bdr)'}}>
+              <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:10}}>Merchant bank account</div>
+              <i className="ti ti-building-bank" style={{fontSize:32,color:'var(--ok)',display:'block',textAlign:'center',margin:'10px 0'}} aria-hidden="true"/>
+              <div style={{fontSize:13,fontWeight:500,textAlign:'center',color:'var(--ok)'}}>$284.50 received</div>
+              <div style={{fontSize:11,color:'var(--text2)',textAlign:'center',marginTop:4}}>Same day or T+1</div>
+              <div style={{fontSize:11,color:'var(--text2)',textAlign:'center'}}>Via Somali settlement bank</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {path==='9b'&&(
+        <div className="fade-up">
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+            <M label="Settlement method" value="EVC Plus agent" icon="ti-device-mobile" color="var(--warn)"/>
+            <M label="Liquidity fee" value="~1% (configurable)" icon="ti-coin" color="var(--warn)"/>
+            <M label="Who pays fee" value="WFP absorbs" icon="ti-building-bank" color="var(--ok)"/>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 28px 1fr 28px 1fr 28px 1fr',gap:6,alignItems:'start'}}>
+            {[
+              {bg:'var(--warn-bg)',bc:'var(--warn-bdr)',icon:'ti-wallet',t:'Merchant wallet',s:'Yusuf Ahmed · $284.50',c:'var(--warn)'},
+              null,
+              {bg:'var(--bg)',icon:'ti-server',t:'SmartVista VAM',s:'Sends funds to EVC agent liquidity wallet',c:'var(--purple)'},
+              null,
+              {bg:'var(--info-bg)',bc:'var(--info-bdr)',icon:'ti-user-circle',t:'EVC liquidity agent',s:'Receives funds · maintains float · ~1% fee charged',c:'var(--info)'},
+              null,
+              {bg:'var(--ok-bg)',bc:'var(--ok-bdr)',icon:'ti-cash',t:'Merchant receives',s:'EVC Plus or cash · in minutes',c:'var(--ok)'},
+            ].map((n,i)=>n===null?<div key={i} style={{display:'flex',alignItems:'center',paddingTop:50}}><i className="ti ti-arrow-right" style={{fontSize:16,color:'var(--text3)'}} aria-hidden="true"/></div>:(
+              <div key={i} className="flow-col" style={{background:n.bg||'var(--bg)',borderColor:n.bc||'var(--bdr)'}}>
+                <i className={`ti ${n.icon}`} style={{fontSize:28,color:n.c,display:'block',textAlign:'center',margin:'8px 0 10px'}} aria-hidden="true"/>
+                <div style={{fontSize:12,fontWeight:500,textAlign:'center',marginBottom:6}}>{n.t}</div>
+                <div style={{fontSize:11,color:'var(--text2)',textAlign:'center'}}>{n.s}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{marginTop:16}}>
+            <div className="card-hd"><i className="ti ti-info-circle" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Liquidity agent operations (step 10)</div>
+            <div className="card-bd">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                {[['Agent receives funds via','SmartVista liquidity wallet'],['Agent maintains','EVC float / cash reserves'],['Fee charged','~1% (configurable by WFP)'],['Who absorbs fee','WFP — part of delivery budget'],['WFP delivery cost comparison','~$1.50/$100 vs $4–6 current'],['Agent can operate offline','Transactions sync when connected']].map(([k,v])=>(
+                  <div key={k} style={{display:'flex',gap:8,fontSize:12}}>
+                    <i className="ti ti-point-filled" style={{fontSize:8,color:'var(--warn)',marginTop:4,flexShrink:0}} aria-hidden="true"/>
+                    <span><span style={{fontWeight:500}}>{k}</span><span style={{color:'var(--text2)'}}> — {v}</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── SCREEN 7: Fraud ─── */
+function FraudScreen(){
+  const [s,setS]=useState(0);
+  const [running,setRunning]=useState(false);
+  const run=async()=>{
+    setRunning(true);
+    for(let i=1;i<=4;i++){await new Promise(r=>setTimeout(r,i===2?1800:900));setS(i);}
+    setRunning(false);
+  };
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:18}}>
+        <M label="Transactions monitored" value="1,247" icon="ti-eye"/>
+        <M label="Fraud attempts blocked" value="3" icon="ti-shield-x" color="var(--err)"/>
+        <M label="Velocity flags" value="1" icon="ti-alert-triangle" color="var(--warn)"/>
+        <M label="Fraud prevention rate" value="100%" icon="ti-shield-check" color="var(--ok)"/>
+      </div>
+      {s>=3&&<div className="fade-up" style={{padding:'12px 16px',background:'var(--err-bg)',border:'0.5px solid var(--err-bdr)',borderRadius:8,marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
+        <i className="ti ti-shield-x" style={{fontSize:20,color:'var(--err)'}} aria-hidden="true"/>
+        <div><div style={{fontSize:13,fontWeight:500,color:'var(--err)'}}>Fraud attempt detected and blocked</div>
+        <div style={{fontSize:11,color:'var(--err)'}}>Card SO-BDO-4803 used by unregistered individual · Alert sent to WFP supervisor · Immutably logged on Algorand</div></div>
+      </div>}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div>
+          <div className="stage-bar">
+            {[1,2,3,4].map(i=>(
+              <React.Fragment key={i}>
+                <div className="s-dot" style={{background:s>=i?'var(--err-bg)':'var(--bg)',borderColor:s>=i?'var(--err-bdr)':'var(--bdr)',color:s>=i?'var(--err)':'var(--text3)'}}>
+                  {s>=i?<i className="ti ti-x" style={{fontSize:10}} aria-hidden="true"/>:i}
+                </div>
+                {i<4&&<div style={{flex:1,height:1,background:s>i?'var(--err-bdr)':'var(--bdr)'}}/>}
+              </React.Fragment>
+            ))}
+            <div style={{marginLeft:'auto',display:'flex',gap:6}}>
+              <button onClick={()=>{setS(0);setRunning(false);}} disabled={running||s===0} style={{fontSize:11}}>Reset</button>
+              <button onClick={run} disabled={running||s>0} style={{fontSize:12}}><i className="ti ti-player-play" aria-hidden="true"/> Play</button>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 24px 1fr',gap:8,alignItems:'start'}}>
+            <div className="flow-col" style={{borderColor:s>=3?'var(--err-bdr)':'var(--bdr)',background:s>=3?'var(--err-bg)':'var(--bg)'}}>
+              <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:8}}>Fraudster</div>
+              <div style={{textAlign:'center',padding:'8px 0'}}>
+                <div style={{width:40,height:40,borderRadius:'50%',background:'var(--err-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:500,color:'var(--err)',margin:'0 auto 8px'}}>AC</div>
+                <div style={{fontSize:12,fontWeight:500}}>Ahmed (camp leader)</div>
+                <div style={{fontSize:10,color:'var(--text3)'}}>Using stolen card #4803</div>
+              </div>
+              {s>=1&&<div className="fade-up" style={{padding:'8px',background:'var(--bg2)',borderRadius:6,fontSize:11,marginTop:8,textAlign:'center',color:'var(--err)'}}>Taps NFC card at merchant terminal</div>}
+            </div>
+            <div style={{display:'flex',justifyContent:'center',paddingTop:42}}><i className="ti ti-arrow-right" style={{fontSize:15,color:s>=1?'var(--err)':'var(--text3)'}} aria-hidden="true"/></div>
+            <div className="flow-col" style={{borderColor:s>=3?'var(--err-bdr)':s>=1?'var(--warn-bdr)':'var(--bdr)',background:s>=3?'var(--err-bg)':s>=1?'var(--warn-bg)':'var(--bg)'}}>
+              <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text3)',marginBottom:8}}>SmartVista check</div>
+              <div style={{textAlign:'center',padding:'8px 0'}}>
+                <div style={{position:'relative',width:52,height:52,margin:'0 auto 8px'}}>
+                  <i className="ti ti-fingerprint" style={{fontSize:52,color:s>=3?'var(--err)':s>=1?'var(--warn)':'var(--text3)',transition:'color 0.5s'}} aria-hidden="true"/>
+                  {s===2&&<div className="scan-bar"/>}
+                </div>
+                <div style={{fontSize:11,fontWeight:500,color:s>=3?'var(--err)':s>=1?'var(--warn)':'var(--text2)'}}>
+                  {s===0?'Awaiting':s===1?'Reading card...':s===2?'Biometric scan...':'MISMATCH'}
+                </div>
+              </div>
+              {s>=3&&<div className={`${s===3?'shake':''}`} style={{padding:'8px',background:'var(--err-bg)',borderRadius:6,fontSize:11,color:'var(--err)',textAlign:'center',fontWeight:500,marginTop:8}}>
+                <i className="ti ti-x" aria-hidden="true"/> Biometric mismatch — denied
+              </div>}
+            </div>
+          </div>
+          {s>=4&&<div className="fade-up" style={{marginTop:10,padding:'10px 12px',background:'var(--warn-bg)',border:'0.5px solid var(--warn-bdr)',borderRadius:8}}>
+            <div style={{fontSize:11,fontWeight:500,color:'var(--warn)',marginBottom:4}}><i className="ti ti-bell" aria-hidden="true"/> WFP supervisor alert — {new Date().toTimeString().slice(0,8)}</div>
+            <div style={{fontSize:11,color:'var(--warn)'}}>Fraud attempt on card #4803 · Unregistered individual · Yusuf Ahmed shop · Logged on Algorand: ALG-SO-FRAUD-4803</div>
+          </div>}
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-radar" style={{fontSize:14,color:'var(--err)'}} aria-hidden="true"/>Fraud monitoring — SmartVista real-time</div>
+          <div className="card-bd" style={{padding:'12px 14px'}}>
+            {[
+              {t:'Duplicate card detection',d:'Same card used twice in cycle → blocked immediately'},
+              {t:'Velocity checks',d:'Unusually high transaction frequency at same merchant → flagged'},
+              {t:'Geo-location verification',d:'Transaction location must match beneficiary\'s registered camp zone'},
+              {t:'Merchant behaviour analytics',d:'Patterns like bulk same-amount transactions → investigation triggered'},
+              {t:'Biometric mismatch alert',d:'Wrong fingerprint or PIN → transaction denied, WFP notified'},
+              {t:'Camp leader card hoarding',d:'Multiple cards used by one person → biometric blocks all attempts'},
+              {t:'10% cashback fraud',d:'Merchant cannot adjust entitlement amount — VAM fixes the amount'},
+            ].map(f=>(
+              <div key={f.t} style={{display:'flex',gap:8,padding:'6px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <i className="ti ti-shield-check" style={{fontSize:13,color:'var(--ok)',flexShrink:0,marginTop:1}} aria-hidden="true"/>
+                <div><span style={{fontWeight:500}}>{f.t}</span><span style={{color:'var(--text2)'}}> — {f.d}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 8: Algorand Audit ─── */
+function AlgoScreen(){
+  const [ledger,setLedger]=useState(INIT_LEDGER);
+  const [count,setCount]=useState(5683);
+  const add=()=>{
+    const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const h=Array.from({length:12},()=>ch[Math.floor(Math.random()*ch.length)]).join('');
+    const evs=['redemption','enrolment','disbursement'];
+    const ms=['Yusuf Ahmed','Hodan Ali','Maxamed Omar'];
+    const ids=['SO-BDO-5021','SO-BDO-4102','SO-BDO-3847'];
+    setLedger(l=>[{hash:h.slice(0,5)+'...'+h.slice(7),id:ids[Math.floor(Math.random()*ids.length)],m:ms[Math.floor(Math.random()*ms.length)],amt:'$50',t:new Date().toTimeString().slice(0,8),ok:true,ev:evs[Math.floor(Math.random()*evs.length)],fresh:true},...l.slice(0,9)]);
+    setCount(c=>c+1);
+  };
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:18}}>
+        <M label="On-chain events" value={count.toLocaleString()} icon="ti-link" color="var(--purple)"/>
+        <M label="USDC disbursed" value="$284,150" icon="ti-coin" color="var(--teal)"/>
+        <M label="Fraud events logged" value="3" icon="ti-shield-x" color="var(--err)"/>
+        <M label="Donor audit access" value="Real-time" icon="ti-eye" color="var(--ok)"/>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-link" style={{fontSize:14,color:'var(--purple)'}} aria-hidden="true"/>Algorand — key events recorded</div>
+          <div className="card-bd" style={{padding:'12px 14px'}}>
+            {[
+              {ev:'Treasury movement',d:'Donor USDC deposited to smart contract',c:'var(--purple)'},
+              {ev:'Disbursement event',d:'WFP loads funds to beneficiary wallets',c:'var(--info)'},
+              {ev:'Enrolment event',d:'Beneficiary registered by field agent',c:'var(--ok)'},
+              {ev:'Transaction checkpoint',d:'SmartVista verified redemption',c:'var(--teal)'},
+              {ev:'Settlement event',d:'Merchant wallet credited',c:'var(--ok)'},
+              {ev:'Fraud event',d:'Blocked biometric mismatch attempt',c:'var(--err)'},
+            ].map(e=>(
+              <div key={e.ev} style={{display:'flex',gap:10,padding:'7px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <div style={{width:6,height:6,borderRadius:'50%',background:e.c,marginTop:5,flexShrink:0}}/>
+                <div><span style={{fontWeight:500,color:e.c}}>{e.ev}</span><span style={{color:'var(--text2)'}}> — {e.d}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-lock" style={{fontSize:14,color:'var(--purple)'}} aria-hidden="true"/>Why Algorand matters for WFP + donors</div>
+          <div className="card-bd" style={{padding:'12px 14px'}}>
+            {[
+              'Every dollar release requires a SmartVista verified biometric event — no manual override possible',
+              'Donors (ECHO, USAID) can independently verify fund flow without relying on WFP reports',
+              'Immutable fraud event log — cannot be altered after the fact by any party',
+              'Smart contract conditions (fingerprint_match = TRUE) enforced on-chain',
+              'Enrolment audit trail — every NFC card issuance timestamped and geo-tagged',
+              'Settlement proof — each merchant wallet credit confirmed on-chain',
+              'Regulatory compliance — full chain of custody from donor to beneficiary',
+            ].map((t,i)=>(
+              <div key={i} style={{display:'flex',gap:8,padding:'5px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:12}}>
+                <i className="ti ti-check" style={{fontSize:12,color:'var(--ok)',marginTop:2,flexShrink:0}} aria-hidden="true"/>{t}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-hd">
+          <i className="ti ti-link" style={{fontSize:14,color:'var(--purple)'}} aria-hidden="true"/>Algorand live ledger — Baidoa December 2025
+          <span className="pulse" style={{marginLeft:'auto',width:7,height:7,borderRadius:'50%',background:'var(--ok)',display:'inline-block'}}/>
+          <button onClick={add} style={{marginLeft:10,fontSize:12}}><i className="ti ti-plus" aria-hidden="true"/> Simulate event</button>
+        </div>
+        <table style={{tableLayout:'fixed'}}>
+          <colgroup><col style={{width:'11%'}}/><col style={{width:'17%'}}/><col style={{width:'13%'}}/><col style={{width:'18%'}}/><col style={{width:'9%'}}/><col style={{width:'14%'}}/><col style={{width:'18%'}}/></colgroup>
+          <thead><tr>{['Status','Tx hash','Beneficiary','Merchant / actor','Amount','Time','Event type'].map(h=><th key={h} className="tbl-hd">{h}</th>)}</tr></thead>
+          <tbody>
+            {ledger.map((tx,i)=>(
+              <tr key={tx.hash+i} style={{borderBottom:'0.5px solid var(--bdr)',background:tx.fresh?'var(--ok-bg)':!tx.ok?'var(--err-bg)':'transparent'}} className={tx.fresh?'slide-r':''}>
+                <td className="tbl-td"><span style={{fontSize:10,padding:'2px 7px',borderRadius:20,background:tx.ok?'var(--ok-bg)':'var(--err-bg)',color:tx.ok?'var(--ok)':'var(--err)'}}>{tx.ok?'confirmed':'blocked'}</span></td>
+                <td className="tbl-td" style={{fontFamily:'monospace',color:'var(--purple)',fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tx.hash}</td>
+                <td className="tbl-td" style={{color:'var(--text2)',fontSize:11}}>{tx.id}</td>
+                <td className="tbl-td" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tx.m}</td>
+                <td className="tbl-td" style={{fontWeight:500,color:tx.ok?'var(--ok)':'var(--err)'}}>{tx.amt}</td>
+                <td className="tbl-td" style={{fontFamily:'monospace',color:'var(--text3)'}}>{tx.t}</td>
+                <td className="tbl-td"><Pill text={tx.ev}/></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREEN 9: Donor Dashboard ─── */
+function DashScreen(){
+  const [dist,setDist]=useState(284150);
+  useEffect(()=>{const t=setInterval(()=>setDist(d=>d+50),3500);return()=>clearInterval(t);},[]);
+  const pct=(dist/600000*100).toFixed(1);
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:18}}>
+        <M label="Total programme" value="$600,000" icon="ti-coin" color="var(--info)"/>
+        <M label="Disbursed to date" value={`$${dist.toLocaleString()}`} icon="ti-circle-check" color="var(--ok)"/>
+        <M label="Beneficiaries reached" value="5,683" icon="ti-users" color="var(--ok)"/>
+        <M label="Fraud prevented" value="$150 (3 blocks)" icon="ti-shield-x" color="var(--err)"/>
+      </div>
+
+      <div className="card">
+        <div className="card-hd"><i className="ti ti-chart-bar" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Fund flow — treasury to beneficiary (full chain of custody)</div>
+        <div className="card-bd">
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4,alignItems:'center',marginBottom:20}}>
+            {[
+              {l:'ECHO donor',v:'$600K',c:'var(--info)',i:'ti-building-bank'},
+              null,
+              {l:'Algorand USDC',v:'$600K locked',c:'var(--purple)',i:'ti-link'},
+              null,
+              {l:'SmartVista VAM',v:'12,000 wallets',c:'var(--teal)',i:'ti-server'},
+              null,
+              {l:'Beneficiaries',v:`$${dist.toLocaleString()}`,c:'var(--ok)',i:'ti-users'},
+            ].map((n,i)=>n===null?<div key={i} style={{textAlign:'center'}}><i className="ti ti-arrow-right" style={{fontSize:14,color:'var(--text3)'}} aria-hidden="true"/></div>:(
+              <div key={i} style={{background:'var(--bg2)',borderRadius:8,padding:'10px',textAlign:'center'}}>
+                <i className={`ti ${n.i}`} style={{fontSize:20,color:n.c,display:'block',margin:'0 auto 6px'}} aria-hidden="true"/>
+                <div style={{fontSize:11,fontWeight:500,color:n.c}}>{n.l}</div>
+                <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>{n.v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginBottom:8,display:'flex',justifyContent:'space-between',fontSize:12}}>
+            <span style={{fontWeight:500}}>Programme utilisation — December 2025</span>
+            <span style={{color:'var(--ok)',fontWeight:500}}>{pct}% · ${dist.toLocaleString()} of $600,000</span>
+          </div>
+          <div style={{height:10,background:'var(--bg2)',borderRadius:5,marginBottom:6}}>
+            <div style={{height:'100%',width:`${pct}%`,background:'var(--ok)',borderRadius:5,transition:'width 0.5s'}}/>
+          </div>
+          <div style={{fontSize:11,color:'var(--text3)'}}>5,683 of 12,000 beneficiaries served · Remaining: ${(600000-dist).toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-map-pin" style={{fontSize:14,color:'var(--info)'}} aria-hidden="true"/>Distribution by camp — Baidoa</div>
+          <div className="card-bd" style={{padding:'12px 14px'}}>
+            {[
+              {camp:'Camp 1 — North Baidoa',pct:68,reach:1251},
+              {camp:'Camp 2 — Market Area',pct:52,reach:1118},
+              {camp:'Camp 3 — East Baidoa',pct:41,reach:1312},
+              {camp:'Camp 4 — Deynile Road',pct:38,reach:1068},
+              {camp:'Host community',pct:47,reach:934},
+            ].map(c=>(
+              <div key={c.camp} style={{marginBottom:10}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}>
+                  <span>{c.camp}</span><span style={{color:'var(--ok)',fontWeight:500}}>{c.pct}% · {c.reach.toLocaleString()} HH</span>
+                </div>
+                <div style={{height:4,background:'var(--bg2)',borderRadius:2}}>
+                  <div style={{height:'100%',width:`${c.pct}%`,background:'var(--ok)',borderRadius:2}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-hd"><i className="ti ti-eye" style={{fontSize:14,color:'var(--purple)'}} aria-hidden="true"/>Donor visibility — what ECHO sees in real time</div>
+          <div className="card-bd" style={{padding:'12px 14px'}}>
+            {[
+              {l:'Every verified transaction',v:'Name masked, wallet ID + amount + merchant + timestamp'},
+              {l:'Fraud attempts',v:'Blocked events with location and card ID'},
+              {l:'Enrolment events',v:'New beneficiary registered by agent with geo-tag'},
+              {l:'Fund flow',v:'Dollar-by-dollar from USDC contract to beneficiary wallet to merchant'},
+              {l:'Merchant performance',v:'Transaction volume, trust score, anomalies'},
+              {l:'Agent performance',v:'Registrations, transactions, GPS audit trail'},
+              {l:'Algorand hash',v:'Every event independently verifiable on-chain — no WFP mediation'},
+            ].map(r=>(
+              <div key={r.l} style={{display:'flex',gap:10,padding:'6px 0',borderBottom:'0.5px solid var(--bdr)',fontSize:11}}>
+                <i className="ti ti-check" style={{fontSize:12,color:'var(--purple)',flexShrink:0,marginTop:2}} aria-hidden="true"/>
+                <div><span style={{fontWeight:500}}>{r.l}</span><span style={{color:'var(--text2)'}}> — {r.v}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Timeline ─── */
+function Timeline({activeSteps}){
+  return(
+    <div className="timeline">
+      {TL_STEPS.map((s,i)=>(
+        <div key={s.n} className="tl-step">
+          <div className="tl-item">
+            <div className={`tl-dot${activeSteps.includes(s.n)?' tl-active':''}`}>{s.n}</div>
+            <div className="tl-label" style={{color:activeSteps.includes(s.n)?'var(--info)':'var(--text3)'}}>{s.lbl}</div>
+          </div>
+          {i<TL_STEPS.length-1&&<div className="tl-line"/>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Root App ─── */
+function App(){
+  const [screen,setScreen]=useState('donor');
+  const [auto,setAuto]=useState(false);
+  const [autoIdx,setAutoIdx]=useState(0);
+  const cur=SCREENS.find(s=>s.id===screen)||SCREENS[0];
+
+  useEffect(()=>{
+    if(!auto)return;
+    const ids=SCREENS.map(s=>s.id);
+    const t=setInterval(()=>{
+      setAutoIdx(i=>{const n=(i+1)%ids.length;setScreen(ids[n]);return n;});
+    },6500);
+    return()=>clearInterval(t);
+  },[auto]);
+
+  return(
+    <div>
+      <div className="topbar">
+        <div style={{width:32,height:32,borderRadius:8,background:'var(--info-bg)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <i className="ti ti-shield-check" style={{fontSize:18,color:'var(--info)'}} aria-hidden="true"/>
+        </div>
+        <div>
+          <span style={{fontWeight:500,fontSize:15}}>Somnexus</span>
+          <span style={{color:'var(--text3)',fontSize:12,marginLeft:8}}>× Algorand × SmartVista VAM · WFP Somalia · Phase 1 demo</span>
+        </div>
+        <div style={{flex:1}}/>
+        <span className="pulse" style={{width:7,height:7,borderRadius:'50%',background:'var(--ok)',display:'inline-block',marginRight:6}}/>
+        <span style={{fontSize:12,color:'var(--text3)',marginRight:14}}>12,000 beneficiaries · Baidoa · live</span>
+        <button onClick={()=>setAuto(a=>!a)} style={{fontSize:13}}>
+          {auto?<><i className="ti ti-player-stop" aria-hidden="true"/> Stop auto-play</>:<><i className="ti ti-player-play" aria-hidden="true"/> Auto-play demo</>}
+        </button>
+      </div>
+
+      <Timeline activeSteps={cur.steps}/>
+
+      <div className="layout">
+        <div className="sidebar">
+          {SCREENS.map((s,i)=>(
+            <div key={s.id} className={`nav-item${screen===s.id?' active':''}`} onClick={()=>{setScreen(s.id);setAuto(false);}}>
+              <i className={`ti ${s.icon}`} style={{fontSize:15,color:screen===s.id?'var(--info)':'var(--text2)'}} aria-hidden="true"/>
+              <span style={{fontSize:12,color:screen===s.id?'var(--info)':'var(--text2)',fontWeight:screen===s.id?500:400}}>{s.label}</span>
+            </div>
+          ))}
+          {auto&&(
+            <div style={{margin:'14px 12px',padding:'10px',background:'var(--bg)',border:'0.5px solid var(--bdr2)',borderRadius:8}}>
+              <div style={{fontSize:11,color:'var(--text3)',marginBottom:6}}>Screen {autoIdx+1} / {SCREENS.length}</div>
+              <div style={{height:3,background:'var(--bdr)',borderRadius:2}}>
+                <div style={{height:'100%',width:`${((autoIdx+1)/SCREENS.length)*100}%`,background:'var(--info)',borderRadius:2,transition:'width 0.5s'}}/>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="content">
+          {screen==='donor'   &&<DonorScreen/>}
+          {screen==='wfp'     &&<WFPScreen/>}
+          {screen==='enroll'  &&<EnrolScreen/>}
+          {screen==='merchant'&&<MerchantScreen/>}
+          {screen==='vam'     &&<VAMScreen/>}
+          {screen==='cashout' &&<CashoutScreen/>}
+          {screen==='fraud'   &&<FraudScreen/>}
+          {screen==='algo'    &&<AlgoScreen/>}
+          {screen==='dash'    &&<DashScreen/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+</body>
+</html>
